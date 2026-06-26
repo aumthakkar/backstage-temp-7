@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: backstage
+  description: Python app that displays time named py7app
+  annotations:
+    github.com/project-slug: aumthakkar/jun26-py7app
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: service
+  owner: development # This is a group which we have to create under entities folder
+  lifecycle: development
