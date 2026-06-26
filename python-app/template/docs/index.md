@@ -1,4 +1,4 @@
-  # Documents for python-app
+  # Documents for ${{ values.app_name }}
   
   This application has two endpoints:
   - '/api/v1/info'
@@ -6,4 +6,4 @@
   
   # How to access the app?
   
-You can access this app by accessing the URL: 'python-app.test.com/api/v1/info'
+You can access this app by accessing the URL: '${{ values.app_name }}-${{ values.app_env }}.test.com/api/v1/info'

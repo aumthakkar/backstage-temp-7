@@ -1,4 +1,4 @@
-name: Backstage Platform Engg CI/CD pipeline
+name: Backstage Platform Engg CI/CD pipeline for ${{ values.app_name }}
 on:
   push:
     branches:
@@ -10,8 +10,8 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ '${{ secrets.DOCKERHUB_USERNAME }}' }}
+          password: ${{ '${{ secrets.DOCKERHUB_TOKEN }}' }}
 
       - name: Reduce the GITHUB_SHA to 6 chars
         shell: bash
@@ -29,10 +29,10 @@ jobs:
         with:
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: aumthakkar/py7app:${{ env.COMMIT_ID }}
+          tags: aumthakkar/${{ values.app_name }}:${{ '${{ env.COMMIT_ID }}' }}
 
     outputs: 
-      commit_id: ${{ env.COMMIT_ID }}
+      commit_id: ${{ '${{ env.COMMIT_ID }}' }}
 
   cd:
     needs: ci
@@ -51,12 +51,12 @@ jobs:
           chmod +x ./yq
           
           # Update the Helm values.yaml file with the latest commit_sha
-          ./yq -i '.image.tag = "${{ needs.ci.outputs.commit_id }}"' charts/py7app/values.yaml
+          ./yq -i '.image.tag = "${{ '${{ needs.ci.outputs.commit_id }}' }}"' charts/${{ values.app_name }}/values-${{ values.app_env }}.yaml
 
       - name: Commit Changes to GitHub
         uses: EndBug/add-and-commit@v10
         with:
-          message: "pushed the image with tag: ${{ needs.ci.outputs.commit_id }}"
+          message: "pushed the image with tag: ${{ '${{ needs.ci.outputs.commit_id }}' }}"
 
       - name: Install ArgoCD CLI
         run: |
@@ -69,42 +69,43 @@ jobs:
       - name: ArgoCD login and App sync
         run: |
           argocd login argocd-server.argocd \
-          --username ${{ secrets.ARGOCD_USERNAME }} \
-          --password ${{ secrets.ARGOCD_PASSWORD }} \
+          --username ${{ '${{ secrets.ARGOCD_USERNAME }}' }} \
+          --password ${{ '${{ secrets.ARGOCD_PASSWORD }}' }} \
           --insecure \
           --grpc-web
 
           # Create and sync the app
-          REPO="https://github.com/aumthakkar/jun26-py7app.git"
+          REPO="https://github.com/aumthakkar/jun26-${{ values.app_name }}.git"
           
           # If not there add the Repo to ArgoCD
           argocd app list | grep -q ${REPO} || argocd repo add ${REPO}
 
           # Create app if not there already
-          if argocd app get py7app > /dev/null 2>&1; then
-            echo "Deleting old app - py7app for a new fresh install..."
-            argocd app delete py7app -y --cascade --wait
+          if argocd app get ${{ values.app_name }} > /dev/null 2>&1; then
+            echo "Deleting old app - ${{ values.app_name }} for a new fresh install..."
+            argocd app delete ${{ values.app_name }} -y --cascade --wait
 
             # Wait while the app gets deleted
-            while argocd app get py7app; do
-              echo "Waiting for App py7app to be deleted..."
+            while argocd app get ${{ values.app_name }}; do
+              echo "Waiting for App ${{ values.app_name }} to be deleted..."
               sleep 2
             done
-            echo "App: py7app deleted."
+            echo "App: ${{ values.app_name }} deleted."
           fi
 
           # Create the app
-          argocd app create py7app \
+          argocd app create ${{ values.app_name }} \
           --dest-server https://kubernetes.default.svc \
           --dest-namespace dev \
-          --path charts/py7app \
+          --path charts/${{ values.app_name }} \
           --repo ${REPO} \
           --revision main \
           --sync-option CreateNamespace=true \
           --sync-policy manual \
+          --values values-${{ values.app_env }}.yaml
 
-          argocd app sync py7app
-          argocd app wait py7app --timeout 120
+          argocd app sync ${{ values.app_name }}
+          argocd app wait ${{ values.app_name }} --timeout 120
 
 
 
