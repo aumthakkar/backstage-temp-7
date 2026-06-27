@@ -78,7 +78,7 @@ jobs:
           --grpc-web
 
           # Create and sync the app
-          REPO="https://github.com/aumthakkar/jun26-${{ values.app_name }}.git"
+          REPO="https://github.com/aum-thakkar/${{ values.app_name }}.git"
           
           # If not there add the Repo to ArgoCD
           argocd app list | grep -q ${REPO} || argocd repo add ${REPO}
