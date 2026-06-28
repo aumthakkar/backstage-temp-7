@@ -85,8 +85,8 @@ jobs:
 
           # Create app if not there already
           if argocd app get ${{ values.app_name }} > /dev/null 2>&1; then
-            echo "Deleting old app - ${{ values.app_name }} for a new fresh install..."
-            argocd app delete ${{ values.app_name }} -y --cascade --wait
+            echo "Deleting old app - ${{ values.app_name }} for a fresh new install..."
+            argocd app delete ${{ values.app_name }} -y --cascade --force
 
             # Wait while the app gets deleted
             while argocd app get ${{ values.app_name }}; do
